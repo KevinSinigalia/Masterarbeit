@@ -1,0 +1,1 @@
+In 30 Frames Test Frame 22-24 sieht man wie bei dem einen Fisch die Tracking ID verschwindet, weil er verdeckt wird und die Segmentierung fehlerhaft ist. Auch wird ein Fisch aus dem benachbarten Aquarium genommen.
