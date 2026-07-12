@@ -1,0 +1,11 @@
+# 1. Der Pfad zum Hauptordner (root)
+path: ./dataset
+
+# 2. Die Pfade zu den Trainings- und Validierungsbildern (relativ zum 'path')
+# YOLO scannt automatisch alle Unterordner (wie video01/) darin.
+train: images/train
+val: images/val
+
+# 3. Definition der Klassen
+names:
+  0: fish

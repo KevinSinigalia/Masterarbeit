@@ -1,3 +1,12 @@
 sam3/sam3/
 dinov3/
 ma1.yml
+sam3/videos/
+sam3/outputs_raw/
+sam3/outputs/
+sam3/runs/
+yolo/outputs_raw/
+yolo/dataset/
+
+*.jpg
+*.png

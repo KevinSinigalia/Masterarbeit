@@ -3,7 +3,7 @@
 # Definition der Pfade
 LOCAL_PATH="./"
 REMOTE_USER="udsvr"
-REMOTE_HOST="iai-hpc2.iai.kit.edu"
+REMOTE_HOST="iai-aida022.iai.kit.edu"
 REMOTE_PATH="/srv/udsvr/Masterarbeit/sam3"
 
 echo "---------------------------------------------------"

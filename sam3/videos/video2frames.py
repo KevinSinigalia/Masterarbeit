@@ -25,7 +25,7 @@ def extract_frames_opencv(video_path, output_folder, target_fps=20):
             break
             
         # Optional: Hier direkt verkleinern, um VRAM zu sparen!
-        frame = cv2.resize(frame, (int(frame.shape[1] * (480/frame.shape[0])), 480))
+        #frame = cv2.resize(frame, (int(frame.shape[1] * (720/frame.shape[0])), 720))
 
         filename = os.path.join(output_folder, f"{frame_id:04d}.jpg")
         cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
@@ -40,4 +40,4 @@ def extract_frames_opencv(video_path, output_folder, target_fps=20):
     print("Fertig!")
 
 # --- ANWENDUNG ---
-extract_frames_opencv("./fishvideo2.mp4", "./frames")
+extract_frames_opencv("./fishvideo9.mp4", "./frames_fishvideo9")

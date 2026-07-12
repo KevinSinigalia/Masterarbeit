@@ -45,6 +45,16 @@ def propagate_in_video(predictor, session_id):
 # %%
 predictor = build_sam3_video_predictor(gpus_to_use=[0])
 
+ 
+# BF16 → FP16 für V100-Kompatibilität
+predictor.model = predictor.model.to(torch.float16)
+torch.cuda.empty_cache()
+ 
+# Sanity check:
+for name, p in predictor.model.named_parameters():
+    print(name, p.dtype)
+    print("-------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DEBUG OUTPUT ABOVE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-------------------")
+    break  # sollte torch.float16 ausgeben
 # %%
 
 video_frames_for_vis = glob.glob(os.path.join(VIDEO_PATH, "*.jpg"))
@@ -62,32 +72,33 @@ except ValueError:
     video_frames_for_vis.sort()
 
 # %%
-response = predictor.handle_request(
-    request=dict(
-        type="start_session",
-        resource_path=VIDEO_PATH,
+    response = predictor.handle_request(
+        request=dict(
+            type="start_session",
+            resource_path=VIDEO_PATH,
+        )
     )
-)
 session_id = response["session_id"]
 
 # %%
-_ = predictor.handle_request(
-    request=dict(
-        type="reset_session",
-        session_id=session_id,
+
+    _ = predictor.handle_request(
+        request=dict(
+            type="reset_session",
+            session_id=session_id,
+        )
     )
-)
 
 prompt_text_str = "Fish"
 frame_idx = 0
-response = predictor.handle_request(
-    request=dict(
-        type="add_prompt",
-        session_id=session_id,
-        frame_index=frame_idx,
-        text=prompt_text_str,
+    response = predictor.handle_request(
+        request=dict(
+            type="add_prompt",
+            session_id=session_id,
+            frame_index=frame_idx,
+            text=prompt_text_str,
+        )
     )
-)
 out = response["outputs"]
 
 #plt.close("all")
