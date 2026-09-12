@@ -40,4 +40,12 @@ def extract_frames_opencv(video_path, output_folder, target_fps=20):
     print("Fertig!")
 
 # --- ANWENDUNG ---
-extract_frames_opencv("./fishvideo9.mp4", "./frames_fishvideo9")
+#extract_frames_opencv("./fishvideo10.mp4", "./frames_fishvideo10")
+for i in range(29, 47):
+    video_path = f"./fishvideo{i}.mp4"
+    output_folder = f"./frames_fishvideo{i}"
+
+    print(f"Verarbeite: {video_path} -> {output_folder}")
+
+    # Aufruf deiner Funktion
+    extract_frames_opencv(video_path, output_folder)

@@ -15,23 +15,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 from PIL import Image
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import shutil
 
 
 # %%
-VIDEO_PATH="./videos/frames"
+#---------get the frames for sam3
+FRAMES_DIR = Path("videos/frames_fishvideo4")
+WORKING_DIR = Path("videos")
+START_FRAME = 1
+END_FRAME = 90
+video_frames_paths = list(
+    filter(
+        lambda frame: START_FRAME <= int(frame.stem) <= END_FRAME,
+        (FRAMES_DIR.glob("*.jpg")),
+    )
+)
+
+#----------
+
+
 #bpe_path = "./sam3/sam3/assets/bpe_simple_vocab_16e6.txt.gz"
 sam3_root = os.path.join(os.path.dirname(sam3.__file__), "..")
 print(sam3_root)
-video_frames_paths = glob.glob(os.path.join(VIDEO_PATH, "*.jpg"))
-video_frames_paths.sort(key=lambda p: int(os.path.splitext(os.path.basename(p))[0]))
-video_frames = [np.array(Image.open(f)) for f in video_frames_paths]
 
-
-
-# %%
-imgs = []
-cap = cv2.VideoCapture(VIDEO_PATH)
-imgs = []
 
 # %%
 def propagate_in_video(predictor, session_id):
@@ -66,30 +74,18 @@ for name, p in predictor.model.named_parameters():
 # %%
 
 
-
 # %%
 
-video_frames_for_vis = glob.glob(os.path.join(VIDEO_PATH, "*.jpg"))
-try:
-    # integer sort instead of string sort (so that e.g. "2.jpg" is before "11.jpg")
-    video_frames_for_vis.sort(
-        key=lambda p: int(os.path.splitext(os.path.basename(p))[0])
+with TemporaryDirectory(dir=WORKING_DIR, prefix="tmp_sam3frames_") as tmp:
+    tmp_dir = Path(tmp)
+    for video_frame_path in video_frames_paths:
+        shutil.copy(video_frame_path, tmp_dir / video_frame_path.name)
+    response = predictor.handle_request(
+        request=dict(
+            type="start_session",
+            resource_path=str(tmp_dir),
+        )
     )
-except ValueError:
-    # fallback to lexicographic sort if the format is not "<frame_index>.jpg"
-    print(
-        f'frame names are not in "<frame_index>.jpg" format: {video_frames_for_vis[:5]=}, '
-        f"falling back to lexicographic sort."
-    )
-    video_frames_for_vis.sort()
-
-# %%
-response = predictor.handle_request(
-    request=dict(
-        type="start_session",
-        resource_path=VIDEO_PATH,
-    )
-)
 session_id = response["session_id"]
 
 # %%
@@ -118,7 +114,7 @@ filtered_outputs = {}
 for frame_idx, data in outputs_per_frame.items():
     filtered_outputs[frame_idx] = {
         "out_obj_ids": data["out_obj_ids"],
-        "out_binary_masks": data["out_binary_masks"]
+        "out_binary_masks": data["out_binary_masks"] #hier schauen nach datentyp int/float/uint16 zum speicherplatz sparen
     }
 
 # 2. Speichern des gefilterten Dictionaries
@@ -129,40 +125,15 @@ save_path = os.path.join(output_folder, f"tracking_results_{session_id}.pt")
 torch.save(filtered_outputs, save_path)
 print(f"Gefilterte Ergebnisse erfolgreich in {save_path} gespeichert.")
 
-# finally, we reformat the outputs for visualization and plot the outputs every 60 frames
-#outputs_per_frame = prepare_masks_for_visualization(outputs_per_frame)
-
-#vis_frame_stride = 50
-#plt.close("all")
-#for frame_idx in range(0, len(outputs_per_frame), vis_frame_stride):
-#    visualize_formatted_frame_output(
-#        frame_idx,
-#        video_frames_for_vis,
-#        outputs_list=[outputs_per_frame],
-#        titles=["SAM 3 Dense Tracking outputs"],
-#        figsize=(6, 4),
-#    )
-
-# %%
-#outputs_per_frame
-
-# %%
-#obj_ids = set()
-#mask = np.zeros((len(video_frames_for_vis), video_frames_for_vis[0].shape[0], video_frames_for_vis[0].shape[1]), dtype=np.uint16)
-#for frame_idx, mask_objs in outputs_per_frame.items():
-#    for mask_obj_id, mask_obj in mask_objs.items():
-#        mask[frame_idx, mask_obj] = mask_obj_id
-#        obj_ids.add(mask_obj_id)
 
 
-# 1. Ordner erstellen
-output_dir = "./outputs"
-os.makedirs(output_dir, exist_ok=True)
 
 
-# 2. Durch die Frames iterieren
+# 2. Wenn outpu masks als png gespeichert werden sollen
 save_pngs = False
 if save_pngs:
+    output_dir = "./outputs"
+    os.makedirs(output_dir, exist_ok=True)
     print(f"Speichere Visualisierungen in {output_dir}...")
     for frame_idx in range(len(outputs_per_frame)):
         # Speicher leeren, um RAM-Probleme zu vermeiden
@@ -189,4 +160,3 @@ if save_pngs:
             print(f"Frame {frame_idx + 1} gespeichert...")
 
     print(f"Fertig! Alle Bilder sind im Ordner '{output_dir}'.")
-

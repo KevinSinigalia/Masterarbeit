@@ -18,7 +18,8 @@ rsync -avzP \
     --exclude='__pycache__/' \
     --exclude='venv/' \
     --exclude='.env' \
-    --exclude='sam3' \
+    --exclude='outputs_raw' \
+    --exclude='videos/*.mp4' \
     "$LOCAL_PATH" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH"
 
 echo "---------------------------------------------------"
