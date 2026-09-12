@@ -26,3 +26,4 @@ yolo/tide_output_plots/
 *.png
 *.mp4
 *.pt
+*.db
