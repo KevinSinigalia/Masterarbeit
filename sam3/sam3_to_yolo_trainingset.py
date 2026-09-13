@@ -2,7 +2,6 @@ import os
 import re
 import gzip
 import pickle
-import random
 import shutil
 import gc
 from pathlib import Path
@@ -16,19 +15,47 @@ from tqdm import tqdm
 MASKS_DIR = Path("./outputs_raw_masks_compressed")
 VIDEOS_DIR = Path("./videos")
 OUTPUT_DIR = Path("./dataset")
+TEST_VIDEOS_TXT = VIDEOS_DIR / "test_videos.txt"
 
 MAX_FILES = None  # Auf None setzen für alle
-VAL_SPLIT = 0.1  # 10% der Chunks gehen ins Validierungsset
 CLASS_ID = 0  # 0 für 'fish'
 CLASS_NAME = "fish"
-RANDOM_SEED = 42
 
-# WICHTIG: Begrenzt auf 4 Prozesse, um den RAM nicht zu überlasten!
-# Falls du 32GB/64GB RAM hast, kannst du vorsichtig auf 6 oder 8 erhöhen.
+# Fallback-Liste der Test/Val-Videos, falls die txt-Datei nicht existiert
+FALLBACK_VAL_VIDEOS = [
+    "fishvideo30", "fishvideo31", "fishvideo32", "fishvideo33", "fishvideo34",
+    "fishvideo38", "fishvideo39", "fishvideo40", "fishvideo56", "fishvideo57",
+    "fishvideo58", "fishvideo59", "fishvideo60", "fishvideo61", "fishvideo62",
+    "fishvideo63", "fishvideo64", "fishvideo65", "fishvideo66", "fishvideo67",
+    "fishvideo68"
+]
+
 NUM_WORKERS = min(4, os.cpu_count() or 1)
 
 
 # =================================================
+
+
+def load_val_video_ids():
+    """Liest die Video-IDs für das Validierungsset ein und gibt ein Set von Integern zurück."""
+    val_ids = set()
+
+    if TEST_VIDEOS_TXT.exists():
+        print(f"[+] Lade Validierungs-Videos aus: {TEST_VIDEOS_TXT}")
+        with open(TEST_VIDEOS_TXT, "r") as f:
+            lines = f.read().split()
+            for entry in lines:
+                match = re.search(r"\d+", entry)
+                if match:
+                    val_ids.add(int(match.group(0)))
+    else:
+        print(f"[!] {TEST_VIDEOS_TXT} nicht gefunden. Nutze Fallback-Liste...")
+        for entry in FALLBACK_VAL_VIDEOS:
+            match = re.search(r"\d+", entry)
+            if match:
+                val_ids.add(int(match.group(0)))
+
+    return val_ids
 
 
 def mask_to_yolo_polygon(mask, img_w, img_h, epsilon_factor=0.002):
@@ -62,7 +89,7 @@ def mask_to_yolo_polygon(mask, img_w, img_h, epsilon_factor=0.002):
 
 
 def process_single_pickle(args):
-    """Verarbeitet genau eine Pickle-Datei isoliert und gibt Speicher sofort frei."""
+    """Verarbeitet genau eine Pickle-Datei isoliert."""
     pkl_file, split, pattern_str, videos_dir_str, output_dir_str, class_id = args
 
     videos_dir = Path(videos_dir_str)
@@ -90,7 +117,6 @@ def process_single_pickle(args):
     if not src_frames_dir.exists():
         return f"Fehler: Bilderordner {src_frames_dir} existiert nicht"
 
-    # Pickle laden
     data = None
     try:
         with gzip.open(pkl_file, 'rb') as f:
@@ -98,7 +124,6 @@ def process_single_pickle(args):
     except Exception as e:
         return f"Fehler beim Laden von {pkl_file.name}: {e}"
 
-    # Frames abarbeiten
     try:
         for frame_key, frame_dict in data.items():
             if isinstance(frame_key, int):
@@ -132,7 +157,6 @@ def process_single_pickle(args):
 
             frame_base_name = f"{abs_frame_nr:04d}"
 
-            # Dateioperationen
             shutil.copy(src_img_path, target_img_dir / f"{frame_base_name}.jpg")
 
             dst_lbl = target_lbl_dir / f"{frame_base_name}.txt"
@@ -141,7 +165,6 @@ def process_single_pickle(args):
                     f.write(line + "\n")
 
     finally:
-        # Explizite Freigabe des RAMs für diesen Prozess
         del data
         gc.collect()
 
@@ -149,8 +172,11 @@ def process_single_pickle(args):
 
 
 def main():
-    random.seed(RANDOM_SEED)
+    # 1. Val-IDs laden
+    val_video_ids = load_val_video_ids()
+    print(f"Festgelegte Val/Test-Videos ({len(val_video_ids)} Stück): {sorted(list(val_video_ids))}\n")
 
+    # 2. Pickle-Dateien suchen
     pickle_files = sorted(list(MASKS_DIR.glob("*.pkl")) + list(MASKS_DIR.glob("*.pkl.gz")))
     if not pickle_files:
         print(f"[!] Keine Dateien im Ordner {MASKS_DIR} gefunden.")
@@ -160,22 +186,34 @@ def main():
         pickle_files = pickle_files[:MAX_FILES]
         print(f"[TESTMODUS] Es werden die ersten {len(pickle_files)} Pickle-Dateien verarbeitet.\n")
     else:
-        print(f"Gefundene Pickle-Dateien: {len(pickle_files)}")
-
-    shuffled_files = list(pickle_files)
-    random.shuffle(shuffled_files)
-
-    if len(shuffled_files) == 1:
-        val_files = set()
-    else:
-        val_count = max(1, int(len(shuffled_files) * VAL_SPLIT))
-        val_files = set(shuffled_files[:val_count])
+        print(f"Gefundene Pickle-Dateien insgesamt: {len(pickle_files)}")
 
     pattern_str = r"tracking_res[u|y]?lk?ts_video_(\d+)_(\d+)_to_(\d+)\.pkl"
+    pattern = re.compile(pattern_str)
 
+    # 3. Tasks vorbereiten und explizit nach Video-ID aufteilen
     tasks = []
+    train_count = 0
+    val_count = 0
+
     for pkl_file in pickle_files:
-        split = "val" if pkl_file in val_files else "train"
+        match = pattern.search(pkl_file.name)
+        if not match:
+            match = re.search(r"(\d+)_(\d+)_to_(\d+)", pkl_file.name)
+
+        if match:
+            vid_id = int(match.group(1))
+            # Wenn die Video-ID in der Test-Liste steht -> 'val', sonst -> 'train'
+            if vid_id in val_video_ids:
+                split = "val"
+                val_count += 1
+            else:
+                split = "train"
+                train_count += 1
+        else:
+            split = "train"
+            train_count += 1
+
         tasks.append((
             pkl_file,
             split,
@@ -185,21 +223,21 @@ def main():
             CLASS_ID
         ))
 
-    print(f"Starte Parallelisierung mit {NUM_WORKERS} Prozessen (RAM-schonend)...")
+    print(f"Aufteilung der Chunks: {train_count} Train-Dateien | {val_count} Val-Dateien")
+    print(f"Starte Parallelisierung mit {NUM_WORKERS} Prozessen...")
 
-    # max_tasks_per_child=1 startet nach jedem Job einen frischen Worker-Prozess,
-    # damit sich keinerlei RAM-Lecks über die Zeit aufstauen können!
+    # 4. Multiprocessing Pool ausführen
     with ProcessPoolExecutor(max_workers=NUM_WORKERS, max_tasks_per_child=1) as executor:
         futures = [executor.submit(process_single_pickle, task) for task in tasks]
 
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Verarbeite Chunks parallel"):
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Verarbeite Chunks"):
             err = future.result()
             if err:
                 print(f"\n[!] {err}")
 
-    # data.yaml erstellen
+    # 5. data.yaml erstellen (portabler relativer Pfad)
     yaml_content = {
-        'path': str(OUTPUT_DIR.resolve()),
+        'path': './dataset',
         'train': 'images/train',
         'val': 'images/val',
         'names': {
@@ -212,6 +250,7 @@ def main():
         yaml.dump(yaml_content, f, default_flow_style=False)
 
     print(f"\n[+] Abgeschlossen! Datensatz liegt in: {OUTPUT_DIR.resolve()}")
+    print(f"[+] data.yaml geschrieben: {yaml_file}")
 
 
 if __name__ == "__main__":

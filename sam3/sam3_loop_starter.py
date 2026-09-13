@@ -7,8 +7,8 @@ OUTPUT_DIR = SCRIPT_DIR / "outputs_raw" # Pfad zu deinen Ergebnissen
 
 def run_processing():
     # Einstellungen
-    FIRST_VIDEO = 29
-    LAST_VIDEO = 46
+    FIRST_VIDEO = 3
+    LAST_VIDEO = 68
     DURATION = 40  # Länge eines Segments
     OVERLAP = 5  # Überlappung (n = n + duration - 5)
 
