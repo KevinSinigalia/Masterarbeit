@@ -1,7 +1,37 @@
 # %%
 import os
 import sys
+import argparse
+import gzip
+import pickle
+from pathlib import Path
+import shutil
+from tempfile import TemporaryDirectory
 
+# Argumente parsen
+parser = argparse.ArgumentParser()
+parser.add_argument("--video_nr", type=int, required=True)
+parser.add_argument("--start", type=int, required=True)
+parser.add_argument("--end", type=int, required=True)
+args = parser.parse_args()
+
+VIDEO_NR = args.video_nr
+START_FRAME = args.start
+END_FRAME = args.end
+
+# Zielverzeichnis und Dateipfad direkt definieren
+output_folder = Path("./outputs_raw_masks_compressed")
+output_folder.mkdir(parents=True, exist_ok=True)
+
+save_filename = f"tracking_results_video_{VIDEO_NR:03d}_{START_FRAME:04d}_to_{END_FRAME:04d}.pkl.gz"
+save_path = output_folder / save_filename
+
+# Prüfen, ob die Zieldatei bereits existiert -> Direkt abbrechen falls ja
+if save_path.exists():
+    print(f"File '{save_path}' bereits vorhanden. Überspringe Verarbeitung.")
+    sys.exit(0)
+
+# %%
 # Umgebungsvariable für Speicheroptimierung (muss vor torch importiert werden)
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
@@ -19,23 +49,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 from PIL import Image
-from pathlib import Path
-from tempfile import TemporaryDirectory
-import shutil
 
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--video_nr", type=int, required=True)
-parser.add_argument("--start", type=int, required=True)
-parser.add_argument("--end", type=int, required=True)
-args = parser.parse_args()
-
-# %%
 # ---------get the frames for sam3
-VIDEO_NR = args.video_nr
-START_FRAME = args.start
-END_FRAME = args.end
 FRAMES_DIR = Path(f"videos/frames_fishvideo{VIDEO_NR}")
 WORKING_DIR = Path("videos")
 
@@ -110,8 +125,6 @@ outputs_per_frame = propagate_in_video(predictor, session_id)
 
 # %%
 # -------- ERGEBNISSE FILTERN UND ALS DICT SPEICHERN --------
-import gzip
-import pickle
 filtered_outputs = {}
 
 for frame_idx, data in outputs_per_frame.items():
@@ -122,14 +135,6 @@ for frame_idx, data in outputs_per_frame.items():
         "out_obj_ids": data["out_obj_ids"],
         "out_binary_masks": binary_masks_uint8
     }
-
-# Zielverzeichnis erstellen
-output_folder = "./outputs_raw_masks_compressed"
-os.makedirs(output_folder, exist_ok=True)
-
-# Dateiname generieren (Endung geändert auf .pkl.gz)
-save_filename = f"tracking_results_video_{VIDEO_NR:03d}_{START_FRAME:04d}_to_{END_FRAME:04d}.pkl.gz"
-save_path = os.path.join(output_folder, save_filename)
 
 # KOMPRIMIERT SPEICHERN
 print(f"Komprimiere und speichere Ergebnisse in: {save_path} ...")
