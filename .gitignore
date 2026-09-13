@@ -27,4 +27,4 @@ yolo/tide_output_plots/
 *.mp4
 *.pt
 *.db
-*.ipynb_checkpoints
+*.ipynb_checkpoints/
