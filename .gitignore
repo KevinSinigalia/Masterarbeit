@@ -28,3 +28,4 @@ yolo/tide_output_plots/
 *.pt
 *.db
 .ipynb_checkpoints/
+**/dataset*/
