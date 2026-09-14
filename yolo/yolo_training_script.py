@@ -15,11 +15,22 @@ results = model.train(
     data="./dataset/data.yaml",
     epochs=300,
     imgsz=1024,
-    rect=True,       # Hält das echte Hochkant-Format bei
-    mosaic=0.0,      # <--- Deaktiviert das 4er-Mosaik komplett!
-    mixup=0.0,       # Deaktiviert das Überblenden von Bildern
-    degrees=5.0,     # Nur leichte Drehung
-    batch=8
+    batch=8,
+    rect=True,  # Behält das schmale Hochkant-Format bei
+    # --- DEAKTIVIERTE AUGMENTATIONEN ---
+    mosaic=0.0,  # 4er-Mosaik komplett aus
+    mixup=0.0,  # Überblenden von Bildern aus
+    cutmix=0.0,  # CutMix explizit aus
+    copy_paste=0.0,  # Copy-Paste von Objekten aus
+    # --- AKTIVIERTE & ANGEPASSTE AUGMENTATIONEN ---
+    degrees=180.0,  # Rotation von -180° bis +180° (alle Winkel)
+    fliplr=0.5,  # Horizontales Spiegeln (50 % Wahrscheinlichkeit)
+    flipud=0.0,  # Vertikales Spiegeln (auf dem Kopf stehend) auslassen
+    erasing=0.4,  # Random Erasing / Cutout (40 % Wahrscheinlichkeit)
+    # --- WEITERE TRAININGSEINSTELLUNGEN ---
+    patience=30,  # Early Stopping: Stoppt, wenn 30 Epochen keine Verbesserung eintritt
+    save=True,
+    plots=True,
 )
 
 print("\n--- Training abgeschlossen! ---")
