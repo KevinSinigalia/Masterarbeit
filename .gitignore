@@ -29,3 +29,4 @@ yolo/tide_output_plots/
 *.db
 .ipynb_checkpoints/
 **/dataset*/
+temp_*
