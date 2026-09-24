@@ -21,6 +21,9 @@ yolo/dataset/
 yolo/recordings*/
 yolo/runs/
 yolo/tide_output_plots/
+sam3/tide_output_plots/
+sam3/gt_labels_new_tofill/
+
 
 *.jpg
 *.png

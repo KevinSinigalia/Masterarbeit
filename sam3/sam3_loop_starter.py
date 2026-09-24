@@ -1,14 +1,15 @@
 import subprocess
 import os
 from pathlib import Path
+
 SCRIPT_DIR = Path(__file__).parent.absolute()
-OUTPUT_DIR = SCRIPT_DIR / "outputs_raw" # Pfad zu deinen Ergebnissen
+OUTPUT_DIR = SCRIPT_DIR / "outputs_raw"  # Pfad zu deinen Ergebnissen
 
 
 def run_processing():
     # Einstellungen
-    FIRST_VIDEO = 3
-    LAST_VIDEO = 68
+    FIRST_VIDEO = 30
+    LAST_VIDEO = 30
     DURATION = 40  # Länge eines Segments
     OVERLAP = 5  # Überlappung (n = n + duration - 5)
 
@@ -32,7 +33,7 @@ def run_processing():
         n = 1
         while True:
             start_f = n
-            end_f = n + DURATION-1
+            end_f = n + DURATION - 1
 
             # Falls das Fenster über das Ende des Videos hinausgehen würde,
             # wird die Schleife für dieses Video beendet.
@@ -40,11 +41,9 @@ def run_processing():
                 print(f"  -> Segment {start_f} bis {end_f} überschreitet total_frames ({total_frames}). Video beendet.")
                 break
 
-           
-
                 # Den Befehl für den neuen Prozess zusammenbauen
             cmd = [
-                #python_executable, "sam3_script_nils_edited_multi.py",
+                # python_executable, "sam3_script_nils_edited_multi.py",
                 python_executable, "sam3_masks_output.py",
                 "--video_nr", str(vid),
                 "--start", str(start_f),
