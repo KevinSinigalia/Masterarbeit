@@ -3,20 +3,19 @@ import os
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent.absolute()
-OUTPUT_DIR = SCRIPT_DIR / "outputs_raw"  # Pfad zu deinen Ergebnissen
 
 
 def run_processing():
     # Einstellungen
-    FIRST_VIDEO = 30
-    LAST_VIDEO = 30
-    DURATION = 40  # Länge eines Segments
+    FIRST_VIDEO = 0
+    LAST_VIDEO = 86
+    DURATION = 30  # Länge eines Segments
     OVERLAP = 5  # Überlappung (n = n + duration - 5)
 
     python_executable = "python3"  # oder "python3" oder dein venv Pfad
 
     for vid in range(FIRST_VIDEO, LAST_VIDEO + 1):
-        frames_dir = Path(f"videos/frames_fishvideo{vid}")
+        frames_dir = Path(f"recordings_counted/cropped_frames/frames_fishvideo{vid}_cropped")
 
         # 1. Zählen, wie viele Frames im Ordner sind
         if not frames_dir.exists():

@@ -32,8 +32,8 @@ args = parser.parse_args()
 VIDEO_NR = args.video_nr
 START_FRAME = args.start
 END_FRAME = args.end
-FRAMES_DIR = Path(f"videos/frames_fishvideo{VIDEO_NR}")
-WORKING_DIR = Path("videos")
+FRAMES_DIR = Path(f"recordings_counted/cropped_frames/frames_fishvideo{VIDEO_NR}_cropped")
+WORKING_DIR = Path("recordings_counted/cropped_frames")
 
 video_frames_paths = list(
     filter(
