@@ -1,8 +1,8 @@
 # Master's Thesis: Fish Detection and Counting with SAM3 and YOLO
 
-Fish in aquarium videos are segmented and counted. SAM3 generates masks that are used to train a YOLO segmentation model. Both models are evaluated against manually annotated ground truth.
+At the current stage, fish in aquarium videos are segmented and counted. SAM3 generates masks that are used to train a YOLO segmentation model. Both models are evaluated against manually annotated ground truth.
 
-**Pipeline:** videos → frames → SAM3 masks → YOLO dataset → YOLO training → evaluation
+**Current pipeline:** videos → frames → SAM3 masks → YOLO dataset → YOLO training → evaluation
 
 ## Structure
 
@@ -10,8 +10,8 @@ Fish in aquarium videos are segmented and counted. SAM3 generates masks that are
 Masterarbeit/
 ├── recordings_counted/     # videos and extracted frames                 [not in git]
 ├── gt_labels_new_tofill/   # ground truth (Label Studio)                 [not in git]
-├── sam3/                   # SAM3: mask generation, YOLO dataset, evaluation → sam3/README.md
-├── yolo/                   # YOLO: training, evaluation                     → yolo/README.md
+├── sam3/                   # SAM3: mask generation, YOLO dataset, evaluation
+├── yolo/                   # YOLO: training, evaluation
 └── Paper/                  # literature
 ```
 
