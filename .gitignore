@@ -23,7 +23,7 @@ yolo/runs/
 yolo/tide_output_plots/
 sam3/tide_output_plots/
 sam3/gt_labels_new_tofill/
-
+sam3/cropped_outputs_raw_masks_compressed/
 
 *.jpg
 *.png
