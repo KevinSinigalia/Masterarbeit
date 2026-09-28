@@ -8,7 +8,7 @@ SCRIPT_DIR = Path(__file__).parent.absolute()
 def run_processing():
     # Einstellungen
     FIRST_VIDEO = 0
-    LAST_VIDEO = 86
+    LAST_VIDEO = 69
     DURATION = 30  # Länge eines Segments
     OVERLAP = 5  # Überlappung (n = n + duration - 5)
 
