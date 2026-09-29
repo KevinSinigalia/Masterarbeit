@@ -1,7 +1,22 @@
-tracker_type: bytetrack
-track_high_thresh: 0.50
-track_low_thresh: 0.10
-new_track_thresh: 0.60
-track_buffer: 30
-match_thresh: 0.80
-fuse_score: true
+tracker_type: tracktrack
+
+# --- Detection input ---
+min_conf: 0.1            # YOLO confidence for the tracker input (low-confidence detections are used too)
+nms_iou: 0.7             # regular NMS IoU threshold of the detections
+nms_iou_extra: 0.95      # loose NMS IoU threshold, recovers detections suppressed by the regular NMS
+min_box_area: 100        # tracks with a smaller box (in px) are not counted
+
+# --- TrackTrack ---
+det_thr: 0.6             # detections above are "high confidence", below are "low confidence"
+init_thr: 0.7            # min. confidence to start a new track
+tai_thr: 0.55            # track-aware initialization: max. IoU of a new track with existing tracks
+match_thr: 0.7           # max. association cost to match a track and a detection
+penalty_p: 0.2           # cost penalty for low-confidence detections
+penalty_q: 0.4           # cost penalty for detections recovered by the loose NMS
+reduce_step: 0.05        # step by which match_thr is lowered in each association round
+min_len: 3               # frames a new track needs before it is output
+max_time_lost: 30        # frames a lost track is kept alive before deletion
+
+# --- Appearance model ---
+reid_weights: osnet_x0_25_msmt17.pt  # ReID model (boxmot), downloaded automatically on first use
+half: false              # FP16 inference for the ReID model
