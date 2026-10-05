@@ -11,6 +11,7 @@ sam3/outputs/
 sam3/outputs_for_yolo/
 sam3/outputs_raw_masks_compressed/
 sam3/outputs_raw_masks_compressed_backup/
+sam3/outputs_raw_masks_compressed_singleframe/
 sam3/runs/
 sam3/sam3/
 sam3/testoutputs/
